@@ -37,17 +37,16 @@ class Mailer implements EventSubscriberInterface
 		$file = fopen("testmailer.txt","w");
 
 		$form = $event->getForm();
-	
+		$data = $form->getData();		
+		$meta = $event->getMeta();
+		
         if (!$form->isValid()) {
-			fwrite($file, 'invalid');
+			fwrite($file, $form->getName().'invalid');
             return;
         }		
 		
 		fwrite($file, 'valid');
 		fclose($file);
-
-		$data = $form->getData();		
-		$meta = $event->getMeta();
 		
         $email = (new TemplatedEmail())
             ->from($this->getFrom())
@@ -59,7 +58,7 @@ class Mailer implements EventSubscriberInterface
                 'formname' => $form->getName(),
                 'meta' => $meta
             ]);		
-				
+			
 		$this->mailer->send($email);
     }
 
@@ -70,17 +69,7 @@ class Mailer implements EventSubscriberInterface
 
     private function getAddress(string $email, string $name): Address
     {
-        $email = $this->parsePartial($email);
-        $name = $this->parsePartial($name);
-
         return new Address($email, $name);
-    }
-
-    private function parsePartial(string $partial): string
-    {
-        $fields = $this->form->getData();
-
-        return Str::placeholders($partial, $fields);
     }
 
     public static function getSubscribedEvents()
