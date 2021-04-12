@@ -123,8 +123,8 @@ class Extension extends BaseExtension
 
 				// Validate client and Get Token
 				$Credentials = new \stdClass; 
-				$Credentials->sUsername = "mahmed";
-				$Credentials->sPassword = "manzoor99";
+				$Credentials->sUsername = $vetrack_username;
+				$Credentials->sPassword = $vetrack_password;
 				$Client->TAuthenticate = $Client->ValidateClient($Credentials);
 
 				// Add student to Vettrak Database
