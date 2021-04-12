@@ -13,23 +13,12 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Bolt\BoltForms\Event\BoltFormsEvent;
-use Bolt\Storage\Entity;
-use Doctrine\ORM\EntityManager;
-use Bolt\Repository\ContentRepository;
-use Bolt\Entity\Content;
-use Bolt\BoltForms\Event\PostSubmitEvent;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mailer\Transport;
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Bridge\Twig\Mime\BodyRenderer;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\Mailer\EventListener\MessageListener;
-use Twig\Environment as TwigEnvironment;
-use Symfony\Component\Mime\Email;
 
 class Extension extends BaseExtension
 {
 	private $messages = [];
+	private $file = null;
 	
     /**
      * Return the full name of the extension
@@ -73,8 +62,6 @@ class Extension extends BaseExtension
 		
 		$this->addListener(BoltFormsEvents::POST_SET_DATA, array($this, 'populateCourses'));	
 		$this->addListener(BoltFormsEvents::PRE_SUBMIT, array($this, 'sendToVetrack'));
-		$this->addListener(BoltFormsEvents::POST_SUBMIT, array($this, 'sendCourseConfirmMail'));	
-		$this->addListener(BoltFormsEvents::POST_SUBMIT, array($this, 'sendConfirmationMail'));
     }
 	
 	public function populateCourses(FormEvent $event): void
@@ -120,8 +107,8 @@ class Extension extends BaseExtension
 
 				// Validate client and Get Token
 				$Credentials = new \stdClass; 
-				$Credentials->sUsername = "xxxx";
-				$Credentials->sPassword = "xxxx";
+				$Credentials->sUsername = "mahmed";
+				$Credentials->sPassword = "manzoor99";
 				$Client->TAuthenticate = $Client->ValidateClient($Credentials);
 
 				// Add student to Vettrak Database
@@ -153,79 +140,6 @@ class Extension extends BaseExtension
 		}
 		
 	}
-	
-    public function sendCourseConfirmMail(FormEvent $event): void
-    {
-		$data = $event->getData();
-		$event = $event->getEvent();
-		$form = $event->getForm();
-		
-		if($form->getName() === 'courses') {
-
-			if($form->isSubmitted() && $form->isValid()) {
-				
-				$to = $data['email'];
-				$subject = "Enrollment Inquiry - Confirmation Email";
-
-				$message_text = file_get_contents('./emails/'.$form->getName().'.html', true);
-				$message = "
-					<html>
-					<head>
-						<title>Enrollment Inquiry - Confirmation Email</title>
-					</head>
-					<body>
-					<table style='border-collapse: collapse;'>
-						<tr>
-							<td style='border: unset'>".$message_text."</td>
-						</tr>
-						<tr>
-							<td style='border: unset'><strong>Your Student ID: ".$data['studentid']."</td>
-						</tr>
-					</table>
-					</body>
-					</html>
-				";
-			
-				// Always set content-type when sending HTML email
-				$headers = "MIME-Version: 1.0" . "\r\n";
-				$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-				// More headers
-				$headers .= 'From: VICSEG New Futures Website <website@vicsegnewfutures.org.au>' . "\r\n";
-				mail($to,$subject,$message,$headers);
-				
-			}
-		}
-	}	
-	
-    public function sendConfirmationMail(FormEvent $event): void
-    {
-		$data = $event->getData();
-		$event = $event->getEvent();
-		$form = $event->getForm();
-				
-		if($form->getName() !== 'courses') {
-			if($form->isSubmitted() && $form->isValid()) {
-				$file = fopen("confirmmaillog.txt","w");			
-				$to = $data['email'];
-				$subject = "Confirmation Mail";
-
-				$message = file_get_contents('./emails/'.$form->getName().'.html', true);
-
-				// Always set content-type when sending HTML email
-				$headers = "MIME-Version: 1.0" . "\r\n";
-				$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-
-				// More headers
-				$headers .= 'From: VICSEG New Futures Website <website@vicsegnewfutures.org.au>' . "\r\n";
-				fwrite($file, $message);
-				
-				mail($to,$subject,$message,$headers);	
-				
-				fclose($file);
-			}
-		}
-	}		
-
 	
     /**
      * Ran automatically, if the current request is from the command line (CLI).
