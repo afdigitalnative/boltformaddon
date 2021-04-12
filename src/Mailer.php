@@ -34,15 +34,18 @@ class Mailer implements EventSubscriberInterface
 
     public function handleEvent(PostSubmitEvent $event): void
     {		
+		$file = fopen("testmailer.txt","w");
+
+		$form = $event->getForm();
+	
         if (!$form->isValid()) {
+			fwrite($file, 'invalid');
             return;
         }		
 		
-		$file = fopen("testmailer.txt","a");
 		fwrite($file, 'valid');
 		fclose($file);
 
-		$form = $event->getForm();
 		$data = $form->getData();		
 		$meta = $event->getMeta();
 		
@@ -83,7 +86,7 @@ class Mailer implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'boltforms.post_submit' => ['handleEvent', 40],
+            'boltforms.post_submit' => ['handleEvent', 60],
         ];
     }
 }

@@ -89,6 +89,7 @@ class Extension extends BaseExtension
     {
 		$vetrack_username = '';
 		$vetrack_password = '';
+		$config = $this->getConfig();
 		
 		if ($config->has('vetrack_api') && isset($config->get('vetrack_api')['username'])) {
 			$vetrack_username = $config->get('vetrack_api')['username'];
@@ -104,8 +105,7 @@ class Extension extends BaseExtension
 		$data = $event->getData();
 		$event = $event->getEvent();
 		$form = $event->getForm();
-
-		
+	
 		if($form->getName() === 'courses') {
 			$sClie_Surname = $data['last'];
 			$sClie_Given = $data['first'];
@@ -115,10 +115,7 @@ class Extension extends BaseExtension
 
 			$file = fopen("test.txt","w");	
 			fwrite($file, $vetrack_username);
-			
-			$config = $this->getConfig();
-			
-			/*
+					
 			if(strlen($sClie_Given) >= 2 && strlen($sClie_Surname) >= 2) {
 				$VETAPIUrl = "https://trainerportal.org.au/VETtrakAPI/VT_API.asmx?wsdl";
 				$Client = new \SoapClient($VETAPIUrl);
@@ -154,11 +151,10 @@ class Extension extends BaseExtension
 			} else {
 				fwrite($file, 'invalid');
 			}
-			*/
 			
 			fclose($file);
 		}
-		
+				
 	}
 	
     /**
