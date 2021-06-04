@@ -77,7 +77,7 @@ class Extension extends BaseExtension
 			$courseSelectOptions['choices'] = [];
 						
 			foreach($courses as $course) {
-				$courseSelectOptions['choices'][$course->getFieldValue('title')] = $course->getFieldValue('slug');	
+				$courseSelectOptions['choices'][$course->getFieldValue('title')] = $course->getFieldValue('title');	
 			}
 
 			$form->add('courseselect', ChoiceType::class, $courseSelectOptions);
@@ -110,13 +110,20 @@ class Extension extends BaseExtension
 			$sClie_Surname = $data['last'];
 			$sClie_Given = $data['first'];
 			$email = $data['email'];
-			$dob = strtotime($data['dob']);
-			$xsdClie_DOB = !is_bool($dob) ? Date('Y-m-d', $dob) : '1970-01-01';
+			
+			$course = $data['courseselect'];
+			
+			$dob = str_replace('/', '-', $data['dob']);
+			$xsdClie_DOB = !is_bool($dob) ? Date('Y-m-d', strtotime($dob)) : '1970-01-01';
+
+			$mobile_number = $data['phone'];
+			$citizenship = $data['status'];
 
 			$file = fopen("test.txt","w");	
-			fwrite($file, $vetrack_username);
+			//fwrite($file, $vetrack_username);
 					
 			if(strlen($sClie_Given) >= 2 && strlen($sClie_Surname) >= 2) {
+				
 				$VETAPIUrl = "https://trainerportal.org.au/VETtrakAPI/VT_API.asmx?wsdl";
 				$Client = new \SoapClient($VETAPIUrl);
 				$Client->TAuthenticate = $Client->API_Handshake();
@@ -143,15 +150,53 @@ class Extension extends BaseExtension
 				$ReturnCode = $Client->TAuthClie->AddClientAfterCheckResult->Clie->Clie_Code;
 				$ReturnStatus = $Client->TAuthClie->AddClientAfterCheckResult->Auth->StatusMessage;	
 				
-				fwrite($file, 'valid'. $ReturnGiven . '/' . $ReturnCode . '/' . $ReturnStatus);				
+				fwrite($file, 'valid'. $ReturnGiven . '/' . $ReturnCode . '/' . $ReturnStatus . '\n');				
+				
+				/// Add some additional data into Vetrack Student 
+				$additionalFieldData = '<AdditionalData>
+							<MobilePhone>'.$mobile_number.'</MobilePhone>
+							<Citizenship>'.$citizenship.'</Citizenship>
+						</AdditionalData>';
+						
+				$paramsObj = new \stdClass; 
+				$paramsObj->token = $Client->TAuthenticate->ValidateClientResult->Token;
+				$paramsObj->clientCode = $ReturnCode;
+				$paramsObj->additionalFieldData = $additionalFieldData;
+										
+				$ReturnUpdate = $Client->UpdateClientAdditionalFields($paramsObj);
+
+				fwrite($file, json_encode($ReturnUpdate->UpdateClientAdditionalFieldsResult->Status) . '\n');
+				if(isset($ReturnUpdate->UpdateClientAdditionalFieldsResult->StatusMessage)) {
+					fwrite($file, $ReturnUpdate->UpdateClientAdditionalFieldsResult->StatusMessage);
+				}				
+				
+				/// Add Client Event
+				date_default_timezone_set('Australia/Melbourne');
+				$todaydate = date('Y-m-d', time());
+				$todaydate = $todaydate."T00:00:00";               
+
+				$EventsDes = new \stdClass;               
+				$EventsDes->EventID = 0;
+				$EventsDes->EventType = 0;
+				$EventsDes->Identifier = $ReturnCode;
+				$EventsDes->EventName = "EOI - Community Sector Courses";
+				$EventsDes->EventStart = $todaydate;
+				$EventsDes->Complete = 0;
+				$EventsDes->Description = $course;
+
+				$AddEvents = new \stdClass;              
+				$AddEvents->token = $Client->TAuthenticate->ValidateClientResult->Token;
+				$AddEvents->eEvent = $EventsDes;               
+				$Client->TAuthID = $Client->AddClientEvent($AddEvents);
+				$Auth = $Client->TAuthID->AddClientEventResult->Auth;				
 				
 				$data['studentid'] = $ReturnCode;
-				$event->setData($data);				
+				$event->setData($data);	
 				
+				fwrite($file, 'AuthID = '.$Auth->ID);
 			} else {
 				fwrite($file, 'invalid');
 			}
-			
 			fclose($file);
 		}
 				
