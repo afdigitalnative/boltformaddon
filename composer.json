@@ -1,0 +1,34 @@
+{
+    "name": "webdevchampion/boltformaddon",
+    "description": "📦 This Bolt extension can be used as a starting point to base your own extensions on.",
+    "type": "bolt-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marko Ivanovic",
+            "email": "onlinewebdev@outlook.com"
+        },
+        {
+            "name": "Ruslan Ismailov",
+            "email": "ruslan.ismailov.u@gmail.com"
+        }		
+    ],
+    "require": {
+        "php": ">=7.1.3",
+        "twig/twig": "^2.12 | ^3.0"
+    },
+    "require-dev": {
+        "bolt/core": "^4.0.0",
+        "symplify/easy-coding-standard": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webdevchampion\\BoltformaddonExtension\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "entrypoint": "Webdevchampion\\BoltformaddonExtension\\Extension"
+    }
+}
